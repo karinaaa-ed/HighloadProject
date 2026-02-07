@@ -1,0 +1,8 @@
+<h1>Films, similar to {{query_film}}: </h1>
+{% for film in films %}
+    <h2><a href="{{film.url}}">{{film.title}}</a></h2>
+    <p>
+        {{film.summary}}
+    </p>
+    <hr>
+{% endfor %}

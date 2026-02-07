@@ -1,0 +1,8 @@
+django
+wikipedia
+scipy
+scikit-learn
+bs4
+requests
+pandas
+psycopg2-binary
