@@ -64,6 +64,11 @@ curl -f http://localhost:8000/train/
    ```bash
    docker-compose down -v
    ```
+4. Инициализация базы данных выполняется автоматически при первом запуске:
+   ```bash
+   ls docker/db/init
+   ```
+   Файлы из `docker/db/init` монтируются в `/docker-entrypoint-initdb.d`.
 
 ### Обучение модели
 Страница `/train` требует файл `wiki_movie_plots_deduped.csv` в корне проекта.

@@ -3,15 +3,20 @@ version: "3.9"
 services:
   db:
     image: postgres:16-alpine
+    container_name: review2-db
     environment:
       POSTGRES_DB: review2
       POSTGRES_USER: review2
       POSTGRES_PASSWORD: review2
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - review2-net
 
   web:
     build: .
+    container_name: review2-web
     depends_on:
       - db
     environment:
@@ -24,6 +29,12 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    networks:
+      - review2-net
+
+networks:
+  review2-net:
+    driver: bridge
 
 volumes:
   postgres_data:
