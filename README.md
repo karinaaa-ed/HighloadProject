@@ -59,7 +59,7 @@ curl -f http://localhost:8000/train/
    ```bash
    docker-compose up --build
    ```
-2. Откройте в браузере: `http://localhost:8000/`.
+2. Откройте в браузере: `http://localhost:8000/` (запросы идут через frontend на backend).
 3. Остановить и удалить контейнеры и данные:
    ```bash
    docker-compose down -v
