@@ -54,6 +54,17 @@ curl -f http://localhost:8000/
 curl -f http://localhost:8000/train/
 ```
 
+## Запуск через docker-compose (PostgreSQL)
+1. Соберите и запустите сервисы:
+   ```bash
+   docker-compose up --build
+   ```
+2. Откройте в браузере: `http://localhost:8000/`.
+3. Остановить и удалить контейнеры и данные:
+   ```bash
+   docker-compose down -v
+   ```
+
 ### Обучение модели
 Страница `/train` требует файл `wiki_movie_plots_deduped.csv` в корне проекта.
 Если вы хотите обучать модель внутри контейнера, передайте файл через volume:
