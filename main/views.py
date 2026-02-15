@@ -54,7 +54,13 @@ def get_similar(request):
     try:
         url = request.GET['url']
         cnt = int(request.GET['cnt'])
-        response = requests.get(url)
+        response = requests.get(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (compatible; HighloadProjectBot/1.0)",
+            },
+            timeout=10,
+        )
     except Exception as e:
         return render(request, 'main/error.html')
     if response:
