@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Запуск обучения модели</title>
+</head>
+<body>
+    <h1>Запуск обучения модели</h1>
+
+    <form method="POST" action="/train/">
+        {% csrf_token %}
+        <label for="num_articles">Количество статей для обучения:</label>
+        <input type="number" id="num_articles" name="num_articles" value="20000" min="1">
+        <button type="submit">Запустить обучение</button>
+    </form>
+
+    <p>
+        После отправки формы задача будет поставлена в очередь, и вы сможете проверять статус через `/task/<task_id>/`.
+    </p>
+</body>
+</html>
