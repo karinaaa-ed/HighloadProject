@@ -6,3 +6,7 @@ bs4
 requests
 pandas
 psycopg2-binary
+celery
+flower
+redis
+django-celery-results
