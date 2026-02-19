@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статус обучения</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #222;
+            padding: 24px 12px;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 22px;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 28px;
+        }
+
+        .text {
+            margin: 0 0 12px;
+            line-height: 1.45;
+            color: #444;
+        }
+
+        .status-box {
+            margin: 16px 0;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #d8d8d8;
+            background: #fafafa;
+        }
+
+        .status-label {
+            font-weight: 700;
+        }
+
+        .status-value {
+            font-weight: 700;
+        }
+
+        .status-pending,
+        .status-started {
+            color: #8a6d3b;
+        }
+
+        .status-success {
+            color: #2e7d32;
+        }
+
+        .status-failure {
+            color: #b71c1c;
+        }
+
+        .success-message {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            background: #edf7ed;
+            border: 1px solid #cfe8cf;
+            border-radius: 6px;
+            color: #1f5d24;
+            font-weight: 600;
+        }
+
+        .error-message {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            background: #fdecec;
+            border: 1px solid #f6c9c9;
+            border-radius: 6px;
+            color: #8f1f1f;
+            white-space: pre-wrap;
+        }
+
+        a {
+            color: #0a58ca;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <h1>Обучение модели запущено</h1>
+        <p class="text">Мы поставили задачу в очередь. Страница обновит статус автоматически.</p>
+
+        <div class="status-box">
+            <div class="text"><span class="status-label">ID задачи:</span> <code>{{ task_id }}</code></div>
+            <div class="text">
+                <span class="status-label">Текущий статус:</span>
+                <span id="statusValue" class="status-value status-pending">PENDING</span>
+            </div>
+            <div class="text"><a id="statusLink" href="/status/{{ task_id }}/">Открыть JSON-статус вручную</a></div>
+        </div>
+
+        <div id="successMessage" class="success-message">✅ Модель обучена! Теперь можно искать похожие фильмы.</div>
+        <div id="errorMessage" class="error-message"></div>
+    </main>
+
+    <script>
+        (function () {
+            var taskId = "{{ task_id }}";
+            var statusUrl = "/status/" + taskId + "/";
+            var statusValue = document.getElementById("statusValue");
+            var successMessage = document.getElementById("successMessage");
+            var errorMessage = document.getElementById("errorMessage");
+            var pollTimer = null;
+
+            function setStatusClass(status) {
+                statusValue.className = "status-value";
+                if (status === "SUCCESS") {
+                    statusValue.classList.add("status-success");
+                } else if (status === "FAILURE") {
+                    statusValue.classList.add("status-failure");
+                } else {
+                    statusValue.classList.add("status-pending");
+                }
+            }
+
+            function stopPolling() {
+                if (pollTimer) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                }
+            }
+
+            function updateStatus() {
+                fetch(statusUrl, { credentials: "same-origin" })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error("Не удалось получить статус задачи");
+                        }
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        var status = data.status || "UNKNOWN";
+                        statusValue.textContent = status;
+                        setStatusClass(status);
+
+                        if (status === "SUCCESS") {
+                            successMessage.style.display = "block";
+                            errorMessage.style.display = "none";
+                            stopPolling();
+                        }
+
+                        if (status === "FAILURE") {
+                            errorMessage.style.display = "block";
+                            errorMessage.textContent = "Обучение завершилось с ошибкой:\n" + (data.result || "Подробности не переданы");
+                            successMessage.style.display = "none";
+                            stopPolling();
+                        }
+                    })
+                    .catch(function () {
+                        statusValue.textContent = "UNKNOWN";
+                        setStatusClass("FAILURE");
+                    });
+            }
+
+            updateStatus();
+            pollTimer = setInterval(updateStatus, 2500);
+        })();
+    </script>
+</body>
+</html>

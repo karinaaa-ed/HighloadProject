@@ -16,6 +16,11 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def _split_csv_env(name, default=""):
+    raw_value = os.environ.get(name, default)
+    return [item.strip() for item in raw_value.split(',') if item.strip()]
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
@@ -25,7 +30,11 @@ SECRET_KEY = 'q*0k1$li$e6zj7@$@u^zs*9zg9t-fuj*^!(xxizd!^x%usqt%+'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-
+ALLOWED_HOSTS = _split_csv_env('ALLOWED_HOSTS', 'localhost,127.0.0.1,backend,frontend')
+CSRF_TRUSTED_ORIGINS = _split_csv_env(
+    'CSRF_TRUSTED_ORIGINS',
+    'http://localhost:8000,http://127.0.0.1:8000,http://localhost,http://127.0.0.1'
+)
 
 
 # Application definition
@@ -146,4 +155,4 @@ INSTALLED_APPS += [
 
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 3600
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
