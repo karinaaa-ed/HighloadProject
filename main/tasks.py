@@ -1,27 +1,58 @@
-import os
 import pickle
 import scipy.sparse
 import scipy.spatial
 import pandas as pd
-import wikipedia
 import requests
 import bs4
 from heapq import heappush, heappop
+from urllib.parse import unquote, urlparse
 
 from celery import shared_task
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from main.models import Article, MLTask
 
+
+WIKIPEDIA_HEADERS = {
+    "User-Agent": "HighloadProjectBot/1.0 (+https://localhost)"
+}
+
+def _extract_title_from_url(source_url):
+    path = urlparse(source_url).path
+    slug = path.rsplit('/', 1)[-1] if path else ''
+    slug = unquote(slug).replace('_', ' ').strip()
+    return slug or "Unknown title"
+
+
+def _build_query_content(source_url):
+    fallback_title = _extract_title_from_url(source_url)
+
+    try:
+        response = requests.get(source_url, timeout=10, headers=WIKIPEDIA_HEADERS)
+        response.raise_for_status()
+        html = bs4.BeautifulSoup(response.text, "html.parser")
+        heading = html.select_one("#firstHeading")
+        title = heading.text.strip() if heading else fallback_title
+
+        paragraphs = [p.get_text(" ", strip=True) for p in html.select("#mw-content-text p") if p.get_text(strip=True)]
+        content = " ".join(paragraphs[:25]).strip()
+        if not content:
+            content = title
+
+        return content
+    except Exception:
+        return fallback_title
+
+
 # Training
 @shared_task(bind=True)
-def train_model_task(self):
+def train_model_task(self, num_articles):
     task = MLTask.objects.get(task_id=self.request.id)
     task.status = "STARTED"
     task.save()
 
     try:
-        max_articles_train = int(os.environ.get("num_articles", 1000))
+        max_articles_train = int(num_articles)
 
         Article.objects.all().delete()
         data = pd.read_csv("wiki_movie_plots_deduped.csv").sample(max_articles_train)
@@ -67,12 +98,7 @@ def inference_task(self, url, cnt):
     task.save()
 
     try:
-        response = requests.get(url, timeout=10)
-        html = bs4.BeautifulSoup(response.text, "html.parser")
-        title = html.select("#firstHeading")[0].text
-
-        page = wikipedia.page(title)
-        content = page.content
+        content = _build_query_content(url)
 
         with open("model.pickle", "rb") as f:
             model = pickle.load(f)
